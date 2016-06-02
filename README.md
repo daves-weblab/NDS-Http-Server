@@ -4,6 +4,8 @@ This is a simple implementation of a Http Server in Java. Currently it only serv
 
 ## Execution ##
 
-The server.jar in the dist folder can be used to execute the server. It serves all files from the public_html folder.
+The server.jar in the dist folder can be used to execute the server. It serves all files from the public_html.
 
-This server was written as a semester project with the restrain on myself to implement it in one day. You ask why? Well... who knows.
+## Progress ##
+
+This implementation is small project for a course in university so do not expect too much from it, it works but time was a problem (see commits)
