@@ -17,6 +17,8 @@ public enum Mime {
 	public static Mime fromString(String mime) {
 		switch (mime) {
 		case "text/html":
+		case "text/css":
+		case "application/javascript":
 			return Mime.TEXT_HTML;
 
 		case "image/png":

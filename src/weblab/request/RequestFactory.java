@@ -15,7 +15,7 @@ import weblab.http.Method;
 public class RequestFactory {
 	public static Request build(InputStream in, OutputStream out) throws IOException {
 		// TODO find out which protocol, currently HTTP only anyways
-		Request request = buildHTTPRequest(in, out);
+		Request request = buildHttpRequest(in, out);
 
 		if (request == null)
 			return null;
@@ -26,10 +26,11 @@ public class RequestFactory {
 		return request;
 	}
 
-	private static HttpRequest buildHTTPRequest(InputStream in, OutputStream out) {
+	private static HttpRequest buildHttpRequest(InputStream in, OutputStream out) {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
 		String http;
+		
 		try {
 			http = reader.readLine();
 
@@ -39,6 +40,9 @@ public class RequestFactory {
 				String method = tokenizer.nextToken();
 				String query = tokenizer.nextToken();
 
+				// TODO use parameters
+				query = stripQueryParameters(query);
+				
 				List<String> headers = new LinkedList<>();
 				String header;
 
@@ -54,5 +58,9 @@ public class RequestFactory {
 		}
 
 		return null;
+	}
+	
+	private static String stripQueryParameters(String query) {
+		return query.split("\\?")[0];
 	}
 }
