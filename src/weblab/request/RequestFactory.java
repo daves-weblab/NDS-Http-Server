@@ -13,34 +13,74 @@ import weblab.http.HttpRequest;
 import weblab.http.Method;
 import weblab.http.Query;
 
+/**
+ * Creates request based on the protocol (http, ws, ...)
+ * 
+ * @author David Riedl <david.riedl@daves-weblab.com>
+ */
 public class RequestFactory {
+	/**
+	 * create a new request
+	 * 
+	 * @param in
+	 *            the input stream
+	 * @param out
+	 *            the output stream
+	 * 
+	 * @return the built request
+	 * 
+	 * @throws IOException
+	 *             if something failed while creating the request
+	 */
 	public static Request build(InputStream in, OutputStream out) throws IOException {
 		// TODO find out which protocol, currently HTTP only anyways
 		Request request = buildHttpRequest(in, out);
 
+		// was it able to build the request?
 		if (request == null)
 			return null;
 
+		// set the streams
 		request.setInputStream(in);
 		request.setOutputStream(out);
 
 		return request;
 	}
 
+	/**
+	 * build a new HttpRequest object
+	 * 
+	 * @param in
+	 *            the input stream
+	 * @param out
+	 *            the output stream
+	 *            
+	 * @return a new request object
+	 */
 	private static HttpRequest buildHttpRequest(InputStream in, OutputStream out) {
+		// let's read what the client sent
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
 		String http;
-		
+
 		try {
+			// first line gives information about the Http protocol
 			http = reader.readLine();
 
 			if (http != null) {
-				StringTokenizer tokenizer = new StringTokenizer(http);
-
-				String method = tokenizer.nextToken();
-				Query query = new Query(tokenizer.nextToken());
+				// the request looks something like this:
+				// GET|POST /theUrl HTTP_VERSION
 				
+				// let's get the needed information (token == /)
+				StringTokenizer tokenizer = new StringTokenizer(http);
+			
+				// get the method
+				String method = tokenizer.nextToken();
+				
+				// get the query url (also extract parameters)
+				Query query = new Query(tokenizer.nextToken());
+
+				// TODO maybe include headers later for caching etc.
 				List<String> headers = new LinkedList<>();
 				String header;
 
@@ -51,7 +91,6 @@ public class RequestFactory {
 				return new HttpRequest(Method.fromSlug(method), query, headers);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

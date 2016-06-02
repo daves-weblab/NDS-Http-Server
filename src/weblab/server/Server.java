@@ -17,16 +17,46 @@ import com.typesafe.config.ConfigFactory;
 import weblab.http.HttpRequest;
 import weblab.request.Middleware;
 
+/**
+ * Abstract Server implementation, which handles incoming connections, logging,
+ * cleanup and middlewares.
+ * 
+ * @author David Riedl <david.riedl@daves-weblab.com>
+ */
 public abstract class Server {
+	/**
+	 * logging file
+	 */
 	private FileWriter mLog;
+
+	/**
+	 * logging format
+	 */
 	private DateFormat mFormat;
+
+	/**
+	 * defines if logging is enabled or not
+	 */
 	private boolean _DEBUG_ = true;
 
+	/**
+	 * socket the server is listening to
+	 */
 	private ServerSocket mServerSocket;
+
+	/**
+	 * the connection handler for new connections
+	 */
 	private ConnectionHandler mConnectionHandler;
 
+	/**
+	 * server configuration (e.g. allowed mime types)
+	 */
 	private Config mConfig;
-	
+
+	/**
+	 * registered http middlewares
+	 */
 	private List<Middleware<HttpRequest>> mHttpMiddlewares;
 
 	/**
@@ -44,7 +74,7 @@ public abstract class Server {
 		mFormat = new SimpleDateFormat("HH:mm:ss:SSS");
 
 		mHttpMiddlewares = new LinkedList<>();
-		
+
 		mConfig = ConfigFactory.parseFile(new File("./config/server.conf"));
 
 		try {
@@ -54,15 +84,31 @@ public abstract class Server {
 			System.err.println("[" + mFormat.format(new Date()) + "] could not open logfile");
 		}
 	}
-	
+
+	/**
+	 * get the server's configuration
+	 * 
+	 * @return the server configuration
+	 */
 	public Config getConfig() {
 		return mConfig;
 	}
 
+	/**
+	 * register a new http middleware
+	 * 
+	 * @param middleware
+	 *            the middleware to register
+	 */
 	public void attachHttpMiddleware(Middleware<HttpRequest> middleware) {
 		mHttpMiddlewares.add(middleware);
 	}
 
+	/**
+	 * get all registered http middlewares
+	 * 
+	 * @return all middlewares
+	 */
 	public List<Middleware<HttpRequest>> getHttpMiddlewares() {
 		return mHttpMiddlewares;
 	}
@@ -129,6 +175,14 @@ public abstract class Server {
 	 *            which has been opened by ServerSocket
 	 */
 	public abstract void clientConnected(final Socket socket);
+
+	/**
+	 * called by {@link Connection} when the connection is being closed
+	 * 
+	 * @param connection
+	 *            the connection which was closed
+	 */
+	public abstract void clientDisconnected(Connection connection);
 
 	/**
 	 * called after closing the ServerSocket to clean up anyhting necessary
