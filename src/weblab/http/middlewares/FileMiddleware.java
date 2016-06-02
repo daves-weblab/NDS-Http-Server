@@ -2,7 +2,6 @@ package weblab.http.middlewares;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import weblab.http.HttpRequest;
 import weblab.http.StatusCode;
@@ -48,14 +47,14 @@ public class FileMiddleware implements Middleware<HttpRequest> {
 	}
 
 	private File getFile(HttpRequest request) {
-		return new File("./public_html" + request.getQuery());
+		return new File("./public_html" + request.getQuery().getQuery());
 	}
 
 	private HttpFileServer getFileServer(HttpRequest request, File file) throws IOException {
-		String mime = Files.probeContentType(file.toPath());
-		Mime mimeType = Mime.fromString(mime);
+		String mimeString = Mime.getMimeType(file);
+		Mime mimeType = Mime.fromString(request.getServer(), mimeString);
 		
-		request.setMime(mime);
+		request.setMime(mimeString);
 		
 		return mimeType.getServer();
 	}

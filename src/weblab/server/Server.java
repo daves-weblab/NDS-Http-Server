@@ -11,6 +11,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import weblab.http.HttpRequest;
 import weblab.request.Middleware;
 
@@ -22,6 +25,8 @@ public abstract class Server {
 	private ServerSocket mServerSocket;
 	private ConnectionHandler mConnectionHandler;
 
+	private Config mConfig;
+	
 	private List<Middleware<HttpRequest>> mHttpMiddlewares;
 
 	/**
@@ -39,6 +44,8 @@ public abstract class Server {
 		mFormat = new SimpleDateFormat("HH:mm:ss:SSS");
 
 		mHttpMiddlewares = new LinkedList<>();
+		
+		mConfig = ConfigFactory.parseFile(new File("./config/server.conf"));
 
 		try {
 			mLog = new FileWriter(new File("log.txt"));
@@ -46,6 +53,10 @@ public abstract class Server {
 			_DEBUG_ = false;
 			System.err.println("[" + mFormat.format(new Date()) + "] could not open logfile");
 		}
+	}
+	
+	public Config getConfig() {
+		return mConfig;
 	}
 
 	public void attachHttpMiddleware(Middleware<HttpRequest> middleware) {

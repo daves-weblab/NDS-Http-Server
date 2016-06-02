@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 import weblab.http.HttpRequest;
 import weblab.http.Method;
+import weblab.http.Query;
 
 public class RequestFactory {
 	public static Request build(InputStream in, OutputStream out) throws IOException {
@@ -38,10 +39,7 @@ public class RequestFactory {
 				StringTokenizer tokenizer = new StringTokenizer(http);
 
 				String method = tokenizer.nextToken();
-				String query = tokenizer.nextToken();
-
-				// TODO use parameters
-				query = stripQueryParameters(query);
+				Query query = new Query(tokenizer.nextToken());
 				
 				List<String> headers = new LinkedList<>();
 				String header;
@@ -58,9 +56,5 @@ public class RequestFactory {
 		}
 
 		return null;
-	}
-	
-	private static String stripQueryParameters(String query) {
-		return query.split("\\?")[0];
 	}
 }

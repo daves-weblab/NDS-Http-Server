@@ -11,14 +11,14 @@ import weblab.request.Request;
 public class HttpRequest extends Request {
 	public static final String EOL = "\r\n";
 	private Method mMethod;
-	private String mQuery;
+	private Query mQuery;
 	private List<Header> mHeaders;
 
 	private String mMime;
 	private StatusCode mStatusCode;
 	private List<String> mOutHeaders;
 
-	public HttpRequest(Method method, String query, List<String> headers) {
+	public HttpRequest(Method method, Query query, List<String> headers) {
 		mMethod = method;
 		mQuery = query;
 		mHeaders = parseHeaders(headers);
@@ -89,7 +89,7 @@ public class HttpRequest extends Request {
 		return mMethod;
 	}
 
-	public String getQuery() {
+	public Query getQuery() {
 		return mQuery;
 	}
 
