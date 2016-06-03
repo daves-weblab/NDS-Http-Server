@@ -1,4 +1,4 @@
-package weblab.http;
+package weblab.http.statuscode;
 
 /**
  * All possible status codes for requests
@@ -6,8 +6,8 @@ package weblab.http;
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
 public enum StatusCode {
-	OK(200, StatusCodeType.SUCCESS), BAD_REQUEST(400, StatusCodeType.CLIENT_ERROR), NOT_FOUND(404,
-			StatusCodeType.CLIENT_ERROR);
+	OK(200, StatusCodeType.SUCCESS, "OK"), BAD_REQUEST(400, StatusCodeType.CLIENT_ERROR, "Bad Request"), NOT_FOUND(404,
+			StatusCodeType.CLIENT_ERROR, "Not Found");
 
 	/**
 	 * the number of the status code
@@ -19,9 +19,15 @@ public enum StatusCode {
 	 */
 	private StatusCodeType mType;
 
-	private StatusCode(int statusCode, StatusCodeType type) {
+	/**
+	 * the status message
+	 */
+	private String mMessage;
+
+	private StatusCode(int statusCode, StatusCodeType type, String message) {
 		mStatusCode = statusCode;
 		mType = type;
+		mMessage = message;
 	}
 
 	/**
@@ -40,6 +46,15 @@ public enum StatusCode {
 	 */
 	public StatusCodeType getType() {
 		return mType;
+	}
+
+	/**
+	 * get the message of the status code
+	 * 
+	 * @return the message
+	 */
+	public String getMessage() {
+		return mMessage;
 	}
 
 	/**

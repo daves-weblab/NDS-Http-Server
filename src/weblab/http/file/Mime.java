@@ -17,16 +17,24 @@ import weblab.server.Server;
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
 public enum Mime {
-	TEXT_HTML(new HttpTextHtmlServer()), IMAGE(new HttpImageServer());
+	TEXT_HTML(HttpTextHtmlServer.class), IMAGE(HttpImageServer.class);
 
-	private HttpFileServer mServer;
+	private Class<? extends FileServerJob> mServer;
 
-	private Mime(HttpFileServer server) {
+	private Mime(Class<? extends FileServerJob> server) {
 		mServer = server;
 	}
 
-	public HttpFileServer getServer() {
-		return mServer;
+	/**
+	 * create a new instance of the server needed for this mime
+	 * 
+	 * @return the new instance
+	 * 
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	public FileServerJob getServer() throws InstantiationException, IllegalAccessException {
+		return mServer.newInstance();
 	}
 
 	/**
@@ -60,7 +68,7 @@ public enum Mime {
 	 * 
 	 * @param file
 	 *            the file
-	 *            
+	 * 
 	 * @return the mime type of the file
 	 * 
 	 * @throws IOException

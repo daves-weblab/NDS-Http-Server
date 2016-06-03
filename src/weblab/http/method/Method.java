@@ -1,4 +1,4 @@
-package weblab.http;
+package weblab.http.method;
 
 /**
  * Supported Methods

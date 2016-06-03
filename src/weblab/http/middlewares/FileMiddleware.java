@@ -3,10 +3,13 @@ package weblab.http.middlewares;
 import java.io.File;
 import java.io.IOException;
 
-import weblab.http.HttpRequest;
-import weblab.http.StatusCode;
-import weblab.http.file.HttpFileServer;
+import weblab.http.file.FileServerJob;
 import weblab.http.file.Mime;
+import weblab.http.header.ConnectionHeader;
+import weblab.http.header.ContentLengthHeader;
+import weblab.http.header.ContentTypeHeader;
+import weblab.http.request.HttpRequest;
+import weblab.http.statuscode.StatusCode;
 import weblab.request.Middleware;
 
 /**
@@ -19,7 +22,7 @@ public class FileMiddleware implements Middleware<HttpRequest> {
 	public boolean execute(HttpRequest request) {
 		// retrieve the requested file
 		File file = getFile(request);
-		HttpFileServer server = null;
+		FileServerJob server = null;
 
 		// check if the file exists
 		if (file.exists()) {
@@ -28,41 +31,35 @@ public class FileMiddleware implements Middleware<HttpRequest> {
 				server = getFileServer(request, file);
 				// set the status code to OK
 				request.setStatusCode(StatusCode.OK);
-
-				// stop propagation to other middlewares
-				request.stopPropagation();
+				
+				server.setFile(file);
+				
+				request.registerServer(server);
+				request.addHeader(new ContentTypeHeader(request.getMime()));
+				request.addHeader(new ContentLengthHeader(server.getContentLength()));
+				request.addHeader(new ConnectionHeader(false));
+				
+				return true;
 			} catch (Exception e) {
 				System.err.println("FileMiddleware: could not serve file ...");
 				e.printStackTrace();
 
 				// something went wrong, Bad Request
 				request.setStatusCode(StatusCode.BAD_REQUEST);
+				return false;
 			}
 		} else {
 			// file not found
 			request.setStatusCode(StatusCode.NOT_FOUND);
+			return false;
 		}
-
-		try {
-			request.writeStatus();
-
-			if (server == null) {
-				return false;
-			}
-
-			server.serve(request, file);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return true;
 	}
 
 	private File getFile(HttpRequest request) {
 		return new File("./public_html" + request.getQuery().getQuery());
 	}
 
-	private HttpFileServer getFileServer(HttpRequest request, File file) throws IOException {
+	private FileServerJob getFileServer(HttpRequest request, File file) throws IOException, InstantiationException, IllegalAccessException {
 		// get the mime type of the file
 		String mimeString = Mime.getMimeType(file);
 		// retrieve the Mime instance

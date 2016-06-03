@@ -14,7 +14,7 @@ import java.util.List;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import weblab.http.HttpRequest;
+import weblab.http.request.HttpRequest;
 import weblab.request.Middleware;
 
 /**

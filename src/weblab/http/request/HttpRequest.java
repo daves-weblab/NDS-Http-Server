@@ -1,10 +1,16 @@
-package weblab.http;
+package weblab.http.request;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import weblab.http.header.Header;
+import weblab.http.header.HttpHeader;
+import weblab.http.header.ServerHeader;
+import weblab.http.method.Method;
+import weblab.http.statuscode.StatusCode;
 import weblab.request.Middleware;
 import weblab.request.Request;
 
@@ -30,6 +36,11 @@ public class HttpRequest extends Request {
 	private Query mQuery;
 
 	/**
+	 * the HTTP version in use
+	 */
+	private String mHttpVersion;
+	
+	/**
 	 * headers the client sent
 	 */
 	private List<Header> mHeaders;
@@ -47,7 +58,9 @@ public class HttpRequest extends Request {
 	/**
 	 * headers that will be sent back
 	 */
-	private List<String> mOutHeaders;
+	private List<Header> mOutHeaders;
+
+	private List<ServerJob> mServers;
 
 	/**
 	 * create a new http request
@@ -59,11 +72,18 @@ public class HttpRequest extends Request {
 	 * @param headers
 	 *            sent headers
 	 */
-	public HttpRequest(Method method, Query query, List<String> headers) {
+	public HttpRequest(Method method, Query query, String httpVersion, List<String> headers) {
 		mMethod = method;
 		mQuery = query;
+		mHttpVersion = httpVersion;
 		mHeaders = parseHeaders(headers);
+
 		mOutHeaders = new LinkedList<>();
+		mServers = new LinkedList<>();
+	}
+
+	public void registerServer(ServerJob server) {
+		mServers.add(server);
 	}
 
 	/**
@@ -84,47 +104,21 @@ public class HttpRequest extends Request {
 			// everything else is not supported yet
 			setStatusCode(StatusCode.BAD_REQUEST);
 		}
-	}
 
-	/**
-	 * send back the status code and the content type defined by the internal
-	 * stored mime type.
-	 * 
-	 * @throws IOException
-	 */
-	public void writeStatus() throws IOException {
-		// server header
-		String server = "Server: Java NDS HttpServer" + EOL;
+		try {
+			writeHeaders();
 
-		// http header
-		String status = "HTTP/1.1 ";
-
-		// content type header
-		String contentType = "Content-Type: " + mMime + EOL;
-
-		switch (mStatusCode) {
-		case OK:
-			status += "200 OK";
-			break;
-
-		case BAD_REQUEST:
-			status += "400 Bad Request";
-			break;
-
-		case NOT_FOUND:
-			status += "404 Not Found";
-		}
-
-		status += " " + EOL;
-
-		// send back the headers
-		DataOutputStream out = new DataOutputStream(getOutputStream());
-
-		out.writeBytes(status);
-		out.writeBytes(server);
-
-		if (mMime != null) {
-			out.writeBytes(contentType);
+			for (ServerJob server : mServers) {
+				try {
+					server.serve(getOutputStream());
+				} catch (IOException e) {
+					System.err.println("error serving content in request");
+					e.printStackTrace();
+				}
+			}
+		} catch (IOException e) {
+			System.err.println("could not serve content");
+			e.printStackTrace();
 		}
 	}
 
@@ -134,8 +128,12 @@ public class HttpRequest extends Request {
 	 * @param header
 	 *            the header
 	 */
-	public void addHeader(String header) {
+	public void addHeader(Header header) {
 		mOutHeaders.add(header);
+	}
+	
+	public List<Header> getHeaders() {
+		return mHeaders;
 	}
 
 	/**
@@ -147,6 +145,10 @@ public class HttpRequest extends Request {
 	public void setMime(String mime) {
 		mMime = mime;
 	}
+	
+	public String getMime() {
+		return mMime;
+	}
 
 	/**
 	 * set the status code
@@ -157,9 +159,65 @@ public class HttpRequest extends Request {
 	public void setStatusCode(StatusCode statusCode) {
 		mStatusCode = statusCode;
 	}
+	
+	public StatusCode getStatusCode() {
+		return mStatusCode;
+	}
+	
+	public String getHttpVersion() {
+		return mHttpVersion;
+	}
 
 	private List<Header> parseHeaders(List<String> headers) {
-		return new LinkedList<Header>();
+		List<Header> parsedHeaders = new LinkedList<>();
+		Header parsedHeader = null;
+
+		for (String header : headers) {
+			if ((parsedHeader = Header.fromString(header)) != null) {
+				parsedHeaders.add(parsedHeader);
+			}
+		}
+
+		return parsedHeaders;
+	}
+
+	private void writeHeaders() throws IOException {
+		DataOutputStream out = new DataOutputStream(getOutputStream());
+
+		System.out.println(mOutHeaders);
+		
+		out.writeBytes(pickHttpHeader().toString());
+		out.writeBytes(pickServerHeader().toString());
+		
+		for(Header header : mOutHeaders) {
+			out.writeBytes(header.toString());
+		}
+
+		out.writeBytes(Header.EOL);
+	}
+	
+	private Header pickHttpHeader() {
+		return pickHeader(HttpHeader.class);
+	}
+	
+	private Header pickServerHeader() {
+		return pickHeader(ServerHeader.class);
+	}
+	
+	private Header pickHeader(Class<? extends Header> header) {
+		Iterator<Header> iterator = mOutHeaders.iterator();
+		Header current;
+		
+		while(iterator.hasNext()) {
+			current = iterator.next();
+			
+			if(header.isAssignableFrom(current.getClass())) {
+				iterator.remove();
+				return current;
+			}
+		}
+		
+		return null;
 	}
 
 	/**

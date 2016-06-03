@@ -1,4 +1,4 @@
-package weblab.http;
+package weblab.http.request;
 
 import java.util.HashMap;
 

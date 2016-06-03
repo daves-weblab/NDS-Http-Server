@@ -1,4 +1,4 @@
-package weblab.http;
+package weblab.http.statuscode;
 
 /**
  * type of a status code

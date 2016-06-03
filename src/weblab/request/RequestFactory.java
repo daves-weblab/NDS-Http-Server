@@ -9,9 +9,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import weblab.http.HttpRequest;
-import weblab.http.Method;
-import weblab.http.Query;
+import weblab.http.header.HttpHeader;
+import weblab.http.method.Method;
+import weblab.http.request.HttpRequest;
+import weblab.http.request.Query;
 
 /**
  * Creates request based on the protocol (http, ws, ...)
@@ -68,10 +69,11 @@ public class RequestFactory {
 			http = reader.readLine();
 
 			if (http != null) {
+				System.out.println(http);
 				// the request looks something like this:
 				// GET|POST /theUrl HTTP_VERSION
 				
-				// let's get the needed information (token == /)
+				// let's get the needed information (token == " ")
 				StringTokenizer tokenizer = new StringTokenizer(http);
 			
 				// get the method
@@ -79,6 +81,8 @@ public class RequestFactory {
 				
 				// get the query url (also extract parameters)
 				Query query = new Query(tokenizer.nextToken());
+				
+				String httpVersion = tokenizer.nextToken();
 
 				// TODO maybe include headers later for caching etc.
 				List<String> headers = new LinkedList<>();
@@ -88,7 +92,7 @@ public class RequestFactory {
 					headers.add(header);
 				}
 
-				return new HttpRequest(Method.fromSlug(method), query, headers);
+				return new HttpRequest(Method.fromSlug(method), query, httpVersion, headers);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

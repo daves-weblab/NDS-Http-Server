@@ -1,30 +1,37 @@
 package weblab.http.file;
 
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-
-import weblab.http.HttpRequest;
+import java.io.OutputStream;
 
 /**
  * Server images back to the client
  * 
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
-public class HttpImageServer implements HttpFileServer {
+public class HttpImageServer extends FileServerJob {
 	@Override
-	public void serve(HttpRequest request, File file) throws IOException {
+	public int getContentLength() {
+		try {
+			FileInputStream fileInput = new FileInputStream(getFile());
+			int length = fileInput.available();
+			
+			fileInput.close();
+			
+			return length;
+		} catch (IOException e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public void serve(OutputStream o) throws IOException {
 		// create a data stream
-		DataOutputStream out = new DataOutputStream(request.getOutputStream());
+		DataOutputStream out = new DataOutputStream(o);
 
 		// create an input stream for the file
-		FileInputStream fileInput = new FileInputStream(file);
-
-		// write content length header
-		out.writeBytes("Content-Length: " + fileInput.available() + HttpRequest.EOL);
-		out.writeBytes("Connection: close" + HttpRequest.EOL);
-		out.writeBytes(HttpRequest.EOL);
+		FileInputStream fileInput = new FileInputStream(getFile());
 
 		// write the file byte wise to the client
 		byte[] buffer = new byte[1024];
