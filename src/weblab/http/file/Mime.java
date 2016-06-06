@@ -17,7 +17,8 @@ import weblab.server.Server;
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
 public enum Mime {
-	TEXT_HTML(HttpTextHtmlServer.class), IMAGE(HttpImageServer.class);
+	TEXT_HTML(HttpTextHtmlServer.class), 
+	IMAGE(HttpImageServer.class);
 
 	private Class<? extends FileServerJob> mServer;
 

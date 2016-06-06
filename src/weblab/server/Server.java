@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 import weblab.http.request.HttpRequest;
 import weblab.request.Middleware;
@@ -67,7 +66,7 @@ public abstract class Server {
 	 * @throws IOException
 	 *             when the ServerSocket can not be opened
 	 */
-	public Server(final int port) throws IOException {
+	public Server(final int port, final Config config) throws IOException {
 		mServerSocket = new ServerSocket(port);
 
 		mConnectionHandler = new ConnectionHandler(this);
@@ -75,7 +74,7 @@ public abstract class Server {
 
 		mHttpMiddlewares = new LinkedList<>();
 
-		mConfig = ConfigFactory.parseFile(new File("./config/server.conf"));
+		mConfig = config;
 
 		try {
 			mLog = new FileWriter(new File("log.txt"));
@@ -83,6 +82,8 @@ public abstract class Server {
 			_DEBUG_ = false;
 			System.err.println("[" + mFormat.format(new Date()) + "] could not open logfile");
 		}
+		
+		System.out.println("Server now running on port " + port);
 	}
 
 	/**

@@ -1,6 +1,10 @@
 package main;
 
+import java.io.File;
 import java.io.IOException;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import weblab.http.middlewares.FileMiddleware;
 import weblab.http.middlewares.HttpHeaderMiddleware;
@@ -18,8 +22,10 @@ public class Main {
 		Server server;
 
 		try {
-			// create a new server instance on port 9090
-			server = new MultithreadedServer(9090);
+			Config config = ConfigFactory.parseFile(new File("./config/server.conf"));
+			
+			// create a new server instance on port defined in the config
+			server = new MultithreadedServer(config.getInt("server.port"), config);
 
 			// time to attach some middlewares
 			// this could come from a config for easier usage

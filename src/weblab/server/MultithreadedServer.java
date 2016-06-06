@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.typesafe.config.Config;
+
 /**
  * Multithreaded server implementation for resolving requests.
  * 
@@ -23,8 +25,8 @@ public class MultithreadedServer extends Server {
 	 * @throws IOException
 	 *             if the port is already in use
 	 */
-	public MultithreadedServer(int port) throws IOException {
-		super(port);
+	public MultithreadedServer(int port, Config config) throws IOException {
+		super(port, config);
 
 		if (running()) {
 			mConnections = new ArrayList<Connection>();
