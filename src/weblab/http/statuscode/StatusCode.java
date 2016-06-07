@@ -6,8 +6,9 @@ package weblab.http.statuscode;
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
 public enum StatusCode {
-	OK(200, StatusCodeType.SUCCESS, "OK"), BAD_REQUEST(400, StatusCodeType.CLIENT_ERROR, "Bad Request"), NOT_FOUND(404,
-			StatusCodeType.CLIENT_ERROR, "Not Found");
+	OK(200, StatusCodeType.SUCCESS, "OK"), 
+	BAD_REQUEST(400, StatusCodeType.CLIENT_ERROR, "Bad Request"), 
+	NOT_FOUND(404, StatusCodeType.CLIENT_ERROR, "Not Found");
 
 	/**
 	 * the number of the status code

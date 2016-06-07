@@ -56,12 +56,18 @@ public class FileMiddleware implements Middleware<HttpRequest> {
 	}
 
 	private File getFile(HttpRequest request) {
-		return new File("./public_html" + request.getQuery().getQuery());
+		File file = new File("./public_html" + request.getQuery().getQuery());
+		
+		if(file.isDirectory()) {
+			file = new File(file.getAbsolutePath() + "/index.html");
+		}
+		
+		return file;
 	}
 
 	private FileServerJob getFileServer(HttpRequest request, File file) throws IOException, InstantiationException, IllegalAccessException {
 		// get the mime type of the file
-		String mimeString = Mime.getMimeType(file);
+		String mimeString = Mime.getMimeType(request.getServer(), file);
 		// retrieve the Mime instance
 		Mime mimeType = Mime.fromString(request.getServer(), mimeString);
 

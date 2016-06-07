@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map.Entry;
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigValue;
 
 import weblab.server.Server;
@@ -17,8 +17,7 @@ import weblab.server.Server;
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
 public enum Mime {
-	TEXT_HTML(HttpTextHtmlServer.class), 
-	IMAGE(HttpImageServer.class);
+	TEXT_HTML(HttpTextHtmlServer.class), IMAGE(HttpImageServer.class);
 
 	private Class<? extends FileServerJob> mServer;
 
@@ -49,7 +48,7 @@ public enum Mime {
 	 * @return the mime type, or null if not supported
 	 */
 	public static Mime fromString(Server server, String mimeString) {
-		ConfigObject config = server.getConfig().getObject("mime.server");
+		Config config = server.getConfig().getConfig("mime.server");
 
 		for (Entry<String, ConfigValue> mimeValues : config.entrySet()) {
 			ConfigList mimeStrings = ((ConfigList) mimeValues.getValue());
@@ -74,7 +73,28 @@ public enum Mime {
 	 * 
 	 * @throws IOException
 	 */
-	public static String getMimeType(File file) throws IOException {
-		return Files.probeContentType(file.toPath());
+	public static String getMimeType(Server server, File file) throws IOException {
+		String mimeString = Files.probeContentType(file.toPath());
+
+		if (mimeString == null) {
+			Config config = server.getConfig().getConfig("mime.extension");
+
+			String extension = config.getString(getFileExtension(file));
+		
+			if(extension != null) {
+				return extension;
+			}
+		}
+
+		return mimeString;
+	}
+
+	public static String getFileExtension(File file) {
+		String name = file.getName();
+		try {
+			return name.substring(name.lastIndexOf(".") + 1);
+		} catch (Exception e) {
+			return "";
+		}
 	}
 }
