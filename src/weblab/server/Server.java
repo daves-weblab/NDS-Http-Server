@@ -8,13 +8,8 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 import com.typesafe.config.Config;
-
-import weblab.http.request.HttpRequest;
-import weblab.request.Middleware;
 
 /**
  * Abstract Server implementation, which handles incoming connections, logging,
@@ -22,7 +17,7 @@ import weblab.request.Middleware;
  * 
  * @author David Riedl <david.riedl@daves-weblab.com>
  */
-public abstract class Server {
+public abstract class Server extends Router {
 	/**
 	 * logging file
 	 */
@@ -36,7 +31,7 @@ public abstract class Server {
 	/**
 	 * defines if logging is enabled or not
 	 */
-	private boolean _DEBUG_ = true;
+	private boolean _DEBUG_ = false;
 
 	/**
 	 * socket the server is listening to
@@ -54,11 +49,6 @@ public abstract class Server {
 	private Config mConfig;
 
 	/**
-	 * registered http middlewares
-	 */
-	private List<Middleware<HttpRequest>> mHttpMiddlewares;
-
-	/**
 	 * custom constructor, needs to be called by subclasses
 	 * 
 	 * @param port
@@ -71,8 +61,6 @@ public abstract class Server {
 
 		mConnectionHandler = new ConnectionHandler(this);
 		mFormat = new SimpleDateFormat("HH:mm:ss:SSS");
-
-		mHttpMiddlewares = new LinkedList<>();
 
 		mConfig = config;
 
@@ -93,25 +81,6 @@ public abstract class Server {
 	 */
 	public Config getConfig() {
 		return mConfig;
-	}
-
-	/**
-	 * register a new http middleware
-	 * 
-	 * @param middleware
-	 *            the middleware to register
-	 */
-	public void attachHttpMiddleware(Middleware<HttpRequest> middleware) {
-		mHttpMiddlewares.add(middleware);
-	}
-
-	/**
-	 * get all registered http middlewares
-	 * 
-	 * @return all middlewares
-	 */
-	public List<Middleware<HttpRequest>> getHttpMiddlewares() {
-		return mHttpMiddlewares;
 	}
 
 	/**
@@ -199,7 +168,9 @@ public abstract class Server {
 	public synchronized void log(final String message) {
 		if (_DEBUG_ && mLog != null) {
 			try {
-				mLog.append("[" + mFormat.format(new Date()) + "] " + message + "\n\n");
+				String log = "[" + mFormat.format(new Date()) + "] " + message + "\n\n";
+				System.out.println(log);
+				mLog.append(log);
 				mLog.flush();
 			} catch (IOException e) {
 				System.err

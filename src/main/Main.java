@@ -6,10 +6,12 @@ import java.io.IOException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import weblab.http.header.ContentTypeHeader;
+import weblab.http.header.ServerHeader;
 import weblab.http.middlewares.FileMiddleware;
-import weblab.http.middlewares.HttpHeaderMiddleware;
-import weblab.http.middlewares.ServerMiddleware;
+import weblab.http.statuscode.StatusCode;
 import weblab.server.MultithreadedServer;
+import weblab.server.Router;
 import weblab.server.Server;
 
 /**
@@ -27,19 +29,48 @@ public class Main {
 			// create a new server instance on port defined in the config
 			server = new MultithreadedServer(config.getInt("server.port"), config);
 
-			// time to attach some middlewares
-			// this could come from a config for easier usage
-			// for now the server is only able to serve files so the
-			// FileMiddleware is enough, later caching middlewares could be
-			// added easily using such a system
-
-			// sets the server header
-			server.attachHttpMiddleware(new ServerMiddleware("NDS Simple Http Server"));
-			server.attachHttpMiddleware(new FileMiddleware());
-
-			// sets the http header after status code has been set
-			server.attachHttpMiddleware(new HttpHeaderMiddleware());
-
+			// express.js style routing, pretty neat right?
+			server
+			// this middleware attaches the Server: NDS Http Server header to each request, just for fun
+			.use((request, response, next) -> {
+				response.addHeader(new ServerHeader("NDS Http Server"));
+				next.apply();
+			})
+			
+			// serve static files
+			.use(new FileMiddleware(config.getString("server.static")))
+		
+			// no file found? let's try these routes then
+			.use("/", (request, response) -> {
+				// let's return only hello world
+				response.setStatusCode(StatusCode.OK);
+				response.addHeader(new ContentTypeHeader("text/html"));
+				response.setContent("Hello World");
+			});
+			
+			/*
+			 * ok that is neat, but what about nested routers?
+			 * oh thats possible too? cool! let's try that.
+			 */
+			
+			Router router = new Router();
+			
+			router.use("/test", (request, response) -> {
+				response.setStatusCode(StatusCode.OK);
+				response.addHeader(new ContentTypeHeader("text/html"));
+				response.setContent("I am the nested route /test");
+			});
+			
+			// let's add the sub router
+			server.use("/workspace", router);
+			
+			// no route matched till now apparently, so let's return 404
+			server.use((request, response, next) -> {
+				if(response.getStatusCode() == null) {
+					response.setStatusCode(StatusCode.NOT_FOUND);
+				}
+			});
+			
 			// start the server, it's serving time
 			server.start();
 		} catch (IOException e) {

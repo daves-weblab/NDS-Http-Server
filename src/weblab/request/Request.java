@@ -1,111 +1,91 @@
 package weblab.request;
 
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.List;
 
-import weblab.server.Server;
+import com.typesafe.config.Config;
 
-/**
- * Abstraction of requests the client sends to the server
- * 
- * @author David Riedl <david.riedl@daves-weblab.com>
- */
-public abstract class Request {
-	/**
-	 * the server the request is being resolved on
-	 */
-	private Server mServer;
+import weblab.http.header.Header;
+import weblab.http.method.Method;
+import weblab.http.request.Query;
 
-	/**
-	 * input stream of the request
-	 */
+public class Request extends HeaderHolder {
+	private Config mConfig;
 	private InputStream mIn;
+	private Method mMethod;
+	private Query mQuery;
+	private String mHttpVersion;
+	private HashMap<String, Object> mArguments;
 
-	/**
-	 * output stream of the request
-	 */
-	private OutputStream mOut;
-
-	/**
-	 * defines if the request was resolved by a middleware already
-	 */
-	private boolean mResolved;
-
-	/**
-	 * set the server the request is being handled by
-	 * 
-	 * @param server
-	 */
-	public void setServer(Server server) {
-		mServer = server;
-	}
-
-	/**
-	 * get the server the request is being handly by
-	 * 
-	 * @return the server
-	 */
-	public Server getServer() {
-		return mServer;
-	}
-
-	/**
-	 * set the input stream of the request
-	 * 
-	 * @param in
-	 *            the input stream
-	 */
-	public void setInputStream(InputStream in) {
+	public Request(Config config, InputStream in, Method method, Query query, String httpVersion, List<String> headers) {
+		mConfig = config;
 		mIn = in;
-	}
+		mArguments = new HashMap<>();
 
-	/**
-	 * set the output stream of the request
-	 * 
-	 * @param out
-	 *            the output stream
-	 */
-	public void setOutputStream(OutputStream out) {
-		mOut = out;
+		mMethod = method;
+		mQuery = query;
+		mHttpVersion = httpVersion;
+		parseHeaders(headers);
 	}
-
-	/**
-	 * get the input stream of the request
-	 * 
-	 * @return the input stream
-	 */
+	
+	private void parseHeaders(List<String> headers) {
+		Header parsedHeader = null;
+		
+		for (String header : headers) {
+			if ((parsedHeader = Header.fromString(header)) != null) {
+				addHeader(parsedHeader);
+			}
+		}
+	}
+	
+	public Config getConfig() {
+		return mConfig;
+	}
+	
 	public InputStream getInputStream() {
 		return mIn;
 	}
-
-	/**
-	 * get the output stream of the request
-	 * 
-	 * @return the output stream
-	 */
-	public OutputStream getOutputStream() {
-		return mOut;
+	
+	public Method getMethod() {
+		return mMethod;
+	}
+	
+	public Query getQuery() {
+		return mQuery;
+	}
+	
+	public String getUrl() {
+		return mQuery.getQuery();
+	}
+	
+	public HashMap<String, String> getParameters() {
+		return mQuery.getParameters();
+	}
+	
+	public String getHttpVersion() {
+		return mHttpVersion;
 	}
 
-	/**
-	 * stop propagation to middlewares, the request is completely resolved
-	 * already
-	 */
-	public void stopPropagation() {
-		mResolved = true;
+	public Request addArgument(String key, Object value) {
+		mArguments.put(key, value);
+		return this;
 	}
 
-	/**
-	 * check if the request is completely resolved already
-	 * 
-	 * @return true if already resolved, false otherwise
-	 */
-	public boolean isResolved() {
-		return mResolved;
+	public Object getArgument(String key) {
+		return getArgument(key, Object.class);
 	}
 
-	/**
-	 * resolve the request
-	 */
-	public abstract void resolve();
+	public <T> T getArgument(String key, Class<T> as) {
+		Object value = mArguments.get(key);
+
+		if (value == null)
+			return null;
+
+		try {
+			return as.cast(value);
+		} catch (ClassCastException e) {
+			return null;
+		}
+	}
 }

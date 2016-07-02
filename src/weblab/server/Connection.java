@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import weblab.request.Request;
 import weblab.request.RequestFactory;
+import weblab.request.Response;
 
 /**
  * This class represents a single connection to a client's browser. It creates a
@@ -48,12 +49,16 @@ public class Connection extends Thread implements Session {
 			out = getSocket().getOutputStream();
 
 			// build a request based on what the client sent to the server
-			Request request = RequestFactory.build(in, out);
-
-			// if a request could be built, resolve it
+			Request request = RequestFactory.build(in, mServer.getConfig());
+			Response response = new Response(out);
+			
+			// if a request could be built
 			if (request != null) {
-				request.setServer(getServer());
-				request.resolve();
+				// execute the server routine
+				mServer.execute(request, response);
+				
+				// send the resonse back to the client
+				response.sendBack(request);
 			}
 
 			// close the streams
