@@ -15,7 +15,7 @@ The server is written similar to express.js. The only things needed to instantia
 #!java
 
 Config config = ConfigFactory.parseFile(...);
-Server server = new MultithreadedServer(config.getInt("server.port", config);
+Server server = new MultithreadedServer(config.getInt("server.port"), config);
 
 ```
 
@@ -34,7 +34,7 @@ server
 })
 
 // serve static files
-.use(new FileMiddleware())
+.use(new FileMiddleware(config.getString("server.static")))
 
 // no file found? let's try these routes then
 .use("/", (request, response) -> {
